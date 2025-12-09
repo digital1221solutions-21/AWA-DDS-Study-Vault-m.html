@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWA-DDS-Study-Vault</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(to bottom right, #a2c8f8, #f0f4f7);
+    margin: 0;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .learning-materials {
+    max-height: 170px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+  }
+
+  .main-title {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    font-weight: 800;
+    color: #2c5282;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    gap: 20px;
+    padding: 0 15px;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    height: 650px; 
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+    border: 4px solid #4299e1;
+  }
+  
+  .card-header {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    overflow: hidden;
+    background-color: #4299e1; /* Changed from pink (#ec4899) to universal blue */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 10px;
+    flex-shrink: 0;
+  }
+
+  .card-content {
+    padding: 15px 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  
+  .modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    width: 450px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1; 
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8; 
+  }
+
+  .exam-creator-modal {
+    width: 450px;
+    max-height: 80vh;
+  }
+  
+  .question-item {
+    background-color: #f9fafb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .dashboard-stat-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .dashboard-stat-card:active {
+    transform: scale(0.98);
+  }
+  
+  .resource-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.75rem;
+    position: relative;
+  }
+  .resource-item:last-child {
+    border-bottom: none;
+  }
+  
+  /* GLOBAL Resource Menu (Not inside card to avoid clipping) */
+  #globalResourceMenu {
+    position: fixed; 
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 99999; 
+    display: none;
+    width: 140px;
+    overflow: hidden;
+  }
+  #globalResourceMenu button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #4a5568;
+    border-bottom: 1px solid #edf2f7;
+    background: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #globalResourceMenu button:last-child {
+    border-bottom: none;
+  }
+  #globalResourceMenu button:hover {
+    background-color: #f7fafc;
+  }
+  #globalResourceMenu button i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+  }
+
+  .subject-management-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  
+  .subject-management-item:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  .user-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  
+  .user-list-item:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+  
+  @media (min-width: 768px) {
+    .card {
+      max-width: 400px;
+      height: 650px;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <h1 class="main-title">⭐AWA-DDS-Study-Vault ⭐</h1>
+
+  <!-- GLOBAL MENU CONTAINER -->
+  <div id="globalResourceMenu"></div>
+
+  <div class="card-container">
+    <div class="card" id="quizCard">
+      <div class="card-header">
+        <div id="quizTimerDisplay" class="text-base font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hidden mb-1">
+          01:00
+        </div>
+        <div id="headerTitle" class="text-xl font-extrabold tracking-wide text-center">Welcome! Sign In</div>
+      </div>
+
+      <div class="card-content" id="quizApp"></div>
+      
+      <!-- Password Modal -->
+      <div id="passwordModal" class="modal-bg">
+        <div class="modal-content transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+          <h4 id="modalTitle" class="text-lg font-bold text-gray-800 mb-3 text-center">Admin Access</h4>
+          <input type="password" id="passwordInput" class="w-full p-2 border-2 border-yellow-300 rounded-lg mb-3 text-center" placeholder="Enter admin123">
+          <div class="flex justify-center space-x-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg text-sm">Cancel</button>
+            <button type="button" onclick="checkAdminPassword()" class="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg text-sm">Enter</button>
+          </div>
+          <p id="passwordError" class="text-red-500 text-xs mt-2 hidden text-center">Incorrect password.</p>
+        </div>
+      </div>
+      
+      <!-- Reset Quiz Modal -->
+      <div id="resetQuizModal" class="modal-bg">
+        <div class="modal-content transform transition-all duration-300 scale-95 opacity-0" id="resetModalContent">
+          <h4 id="resetModalTitle" class="text-lg font-bold text-gray-800 mb-3 text-center">Reset Quiz Progress</h4>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">This will reset ALL quiz progress for ALL users. This action cannot be undone.</p>
+            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
+              <p class="text-sm font-bold text-red-600 mb-1">Warning:</p>
+              <p class="text-xs text-red-500">All user progress, scores, and quiz attempts will be deleted.</p>
+            </div>
+          </div>
+          <input type="password" id="resetPasswordInput" class="w-full p-2 border-2 border-red-300 rounded-lg mb-3 text-center" placeholder="Enter admin password">
+          <div class="flex justify-center space-x-2">
+            <button type="button" onclick="closeResetModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg text-sm">Cancel</button>
+            <button type="button" onclick="confirmResetQuizProgress()" class="px-4 py-2 bg-red-500 text-white font-bold rounded-lg text-sm">Reset All Progress</button>
+          </div>
+          <p id="resetPasswordError" class="text-red-500 text-xs mt-2 hidden text-center">Incorrect password.</p>
+        </div>
+      </div>
+      
+      <!-- Subject Management Modal -->
+      <div id="subjectManagementModal" class="modal-bg">
+        <div class="modal-content exam-creator-modal">
+          <h4 class="text-lg font-bold text-gray-800 mb-3 text-center">Subject Management</h4>
+          
+          <div class="mb-4">
+            <div class="flex items-center mb-3">
+              <input type="text" id="newSubjectName" placeholder="Enter new subject name" 
+                     class="flex-grow p-2 border rounded-l-lg text-sm" maxlength="50">
+              <button type="button" onclick="addNewSubject()" 
+                      class="bg-green-500 hover:bg-green-600 text-white font-bold p-2 rounded-r-lg text-sm">
+                <i class="fas fa-plus"></i> Add
+              </button>
+            </div>
+            
+            <div id="subjectListContainer" class="space-y-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-lg border">
+              <!-- Subject items will be dynamically inserted here -->
+            </div>
+            
+            <div class="mt-3 text-xs text-gray-500">
+              <p><i class="fas fa-info-circle mr-1"></i> Subjects with content cannot be deleted until all questions and resources are removed.</p>
+            </div>
+          </div>
+          
+          <div class="flex justify-between space-x-2">
+            <button type="button" onclick="closeSubjectManagement()" class="w-full bg-gray-400 text-white font-bold py-2 rounded text-sm">Close</button>
+            <button type="button" onclick="saveSubjectChanges()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded text-sm">Save Changes</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- User List Modal -->
+      <div id="userListModal" class="modal-bg">
+        <div class="modal-content exam-creator-modal">
+          <h4 id="userListTitle" class="text-lg font-bold text-gray-800 mb-3 text-center">All Users</h4>
+          
+          <div id="userListContainer" class="space-y-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-lg border mb-4">
+            <!-- User items will be dynamically inserted here -->
+          </div>
+          
+          <div class="bg-gray-100 p-3 rounded-lg mb-4">
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="text-center">
+                <div class="font-bold text-blue-600 text-lg" id="totalUsersCount">0</div>
+                <div class="text-gray-600">Total Users</div>
+              </div>
+              <div class="text-center">
+                <div class="font-bold text-purple-600 text-lg" id="studentUsersCount">0</div>
+                <div class="text-gray-600">Students</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-between space-x-2">
+            <button type="button" onclick="closeUserList()" class="w-full bg-gray-400 text-white font-bold py-2 rounded text-sm">Close</button>
+            <button type="button" onclick="exportUserData()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded text-sm">Export Data</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bulk Uploader Modal -->
+      <div id="bulkUploaderModal" class="modal-bg">
+        <div class="modal-content exam-creator-modal">
+          <h4 class="text-lg font-bold text-gray-800 mb-3 text-center">Bulk Question Uploader</h4>
+          <div class="mb-3 text-xs text-gray-600">
+            <p class="mb-2">CSV Format: subject,level,question,options,answer,type,hint</p>
+            <p class="mb-2">Options separated by "|". Example: <span class="font-mono bg-gray-100 p-1">Math,1,2+2?,3|4|5,4,radio,Easy</span></p>
+            <input type="file" id="csvFileInput" accept=".csv" class="w-full p-1 border rounded mb-2">
+            <p class="mb-1">OR JSON:</p>
+            <input type="file" id="jsonFileInput" accept=".json" class="w-full p-1 border rounded">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Subject</label>
+                <div class="flex">
+                  <select id="uploadSubject" class="flex-grow p-1 text-sm border rounded-l">
+                    <!-- Subjects will be populated dynamically -->
+                  </select>
+                  <button type="button" onclick="openSubjectManagementFromUploader()" 
+                          class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-1 rounded-r text-xs border border-l-0" title="Manage Subjects">
+                    <i class="fas fa-cog"></i>
+                  </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Level</label>
+                <select id="uploadLevel" class="w-full p-1 text-sm border rounded">
+                  <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                  <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                </select>
+            </div>
+          </div>
+          
+          <div class="flex justify-between space-x-2">
+            <button type="button" onclick="closeBulkUploader()" class="w-full bg-gray-400 text-white font-bold py-2 rounded text-sm">Cancel</button>
+            <button type="button" onclick="processBulkUpload()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded text-sm">Upload</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Manual Exam Creator Modal -->
+      <div id="manualExamModal" class="modal-bg">
+        <div class="modal-content exam-creator-modal">
+          <h4 class="text-lg font-bold text-gray-800 mb-3 text-center">Manual Exam Creator</h4>
+          
+          <div class="mb-3">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div class="flex">
+                <select id="manualSubject" class="flex-grow p-1 text-sm border rounded-l">
+                  <!-- Subjects will be populated dynamically -->
+                </select>
+                <button type="button" onclick="openSubjectManagementFromManual()" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-1 rounded-r text-xs border border-l-0" title="Manage Subjects">
+                  <i class="fas fa-cog"></i>
+                </button>
+              </div>
+              <select id="manualLevel" class="w-full p-1 text-sm border rounded">
+                  <option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option>
+                  <option value="6">Level 6</option><option value="7">Level 7</option><option value="8">Level 8</option><option value="9">Level 9</option><option value="10">Level 10</option>
+              </select>
+            </div>
+            
+            <div id="manualQuestionsContainer" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+            
+            <button type="button" onclick="addManualQuestion()" class="w-full mt-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-1.5 rounded text-xs flex items-center justify-center border border-blue-300">
+              <i class="fas fa-plus mr-1"></i> Add Question
+            </button>
+          </div>
+          
+          <div class="flex justify-between space-x-2">
+            <button type="button" onclick="closeManualExamCreator()" class="w-full bg-gray-400 text-white font-bold py-2 rounded text-sm">Cancel</button>
+            <button type="button" onclick="saveManualExam()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded text-sm">Save Exam</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resource Uploader Modal -->
+      <div id="resourceUploaderModal" class="modal-bg">
+        <div class="modal-content exam-creator-modal">
+          <h4 class="text-lg font-bold text-gray-800 mb-3 text-center">Resource Uploader</h4>
+          
+          <div class="mb-3">
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div class="flex">
+                <select id="resourceSubject" class="flex-grow p-1 text-sm border rounded-l">
+                  <!-- Subjects will be populated dynamically -->
+                </select>
+                <button type="button" onclick="openSubjectManagementFromResource()" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-1 rounded-r text-xs border border-l-0" title="Manage Subjects">
+                  <i class="fas fa-cog"></i>
+                </button>
+              </div>
+              <select id="resourceLevel" class="w-full p-1 text-sm border rounded">
+                  <option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option>
+                  <option value="6">Level 6</option><option value="7">Level 7</option><option value="8">Level 8</option><option value="9">Level 9</option><option value="10">Level 10</option>
+              </select>
+            </div>
+            
+            <div class="mb-3 bg-gray-50 p-2 rounded border border-dashed border-gray-300">
+              <label class="block text-xs font-bold text-gray-700 mb-1">Add Document (PDF/HTML/ZIP)</label>
+              <input type="file" id="pdfFileInput" accept=".pdf,.zip,.html,.htm" class="w-full p-1 text-xs">
+            </div>
+            
+            <div class="mb-2 bg-gray-50 p-2 rounded border border-dashed border-gray-300">
+              <label class="block text-xs font-bold text-gray-700 mb-1">Add Video</label>
+              <input type="file" id="videoFileInput" accept="video/*" class="w-full p-1 text-xs">
+            </div>
+            <div id="resourceUploadStatus" class="text-xs text-blue-600 text-center hidden font-bold mt-1">Uploading...</div>
+          </div>
+          
+          <div class="flex justify-between space-x-2">
+            <button type="button" onclick="closeResourceUploader()" class="w-full bg-gray-400 text-white font-bold py-2 rounded text-sm">Close</button>
+            <button type="button" onclick="saveResources()" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded text-sm">Upload & Save</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Admin Dashboard Footer Button -->
+      <div class="p-3 bg-gray-50 border-t border-gray-200 mt-auto">
+        <button type="button" onclick="openModal('dashboard')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm flex items-center justify-center">
+          <i class="fas fa-cogs mr-2"></i>
+          Admin Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==== INDEXEDDB HELPERS (FOR UNLIMITED STORAGE) ====
+    const DB_NAME = 'SofanitDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'resources';
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (event) => resolve(event.target.result);
+            request.onerror = (event) => reject(event.target.error);
+        });
+    }
+
+    async function saveFileToDB(fileBlob, id) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put({ id: id, file: fileBlob });
+            request.onsuccess = () => resolve();
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function getFileFromDB(id) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = (event) => {
+                const result = event.target.result;
+                resolve(result ? result.file : null);
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    // ==== GLOBAL VARIABLES ====
+    let quizApp, headerTitle, timerDisplay;
+    let isAuthenticated = false;
+    let currentUser = null;
+    let mockUsers = [];
+    const adminPassword = "admin123";
+    
+    // Storage keys
+    const STORAGE_KEY = 'sofanit_users';
+    const SETTINGS_KEY = 'sofanit_settings';
+    const QUIZ_DATA_KEY = 'sofanit_quiz_data';
+    const RESOURCES_KEY = 'sofanit_resources_v2';
+    const SUBJECTS_KEY = 'sofanit_subjects';
+    
+    // Quiz state
+    let currentSubject = '';
+    let currentLevel = 0;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let startTime = null;
+    let isAnswered = false;
+    let selectedOptions = []; 
+    let quizSettings = {
+        timerEnabled: true,
+        minutesPerQuestion: 1
+    };
+    
+    // Quiz data structure - now dynamically loaded
+    let quizData = {};
+    let resources = {};
+    let manualQuestions = [];
+    let subjects = [];
+    let pendingSubjectChanges = [];
+
+    // Default subjects for new installations
+    const DEFAULT_SUBJECTS = ["Math", "Reading", "Science", "Computer Science"];
+
+    // Helper: Normalize text for strict comparison
+    function normalizeText(text) {
+        if (text === null || text === undefined) return "";
+        return String(text)
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, ' ')
+            .replace(/[^\w\s]/g, '')
+            .replace(/\s+/g, ' ');
+    }
+
+    // ==== INITIALIZATION ====
+    document.addEventListener('DOMContentLoaded', function() {
+        quizApp = document.getElementById('quizApp');
+        headerTitle = document.getElementById('headerTitle');
+        timerDisplay = document.getElementById('quizTimerDisplay');
+        
+        loadUsers();
+        loadSettings();
+        loadSubjects();
+        loadQuizData();
+        loadResources();
+        
+        if (!mockUsers.some(user => user.username === 'admin')) {
+            mockUsers.push({
+                username: "admin",
+                password: adminPassword,
+                name: "Admin User",
+                email: "admin@sofanit.com",
+                grade: "N/A",
+                quizzesTaken: 0,
+                lastAttempt: null,
+                levelProgress: {},
+                lastAttemptDetails: {}, 
+                testHistory: [],
+                role: "admin",
+                createdAt: new Date().toISOString(),
+                lastLogin: null
+            });
+            saveUsers();
+        }
+        
+        // Enhanced message listener for HTML exams
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'QUIZ_RESULT') {
+                const { score: rScore, total: rTotal, subject: rSub, level: rLvl, userId } = event.data;
+                
+                let targetUser = currentUser;
+                if (userId) {
+                    const foundUser = mockUsers.find(u => u.email === userId || u.username === userId);
+                    if (foundUser) targetUser = foundUser;
+                }
+                
+                if (!targetUser) return;
+                
+                const uIdx = mockUsers.findIndex(u => u.email === targetUser.email);
+                
+                const finalSub = rSub || currentSubject || "External";
+                const finalLvl = parseInt(rLvl) || currentLevel || 1;
+                const score = parseInt(rScore) || 0;
+                const total = parseInt(rTotal) || 1;
+
+                if (uIdx !== -1) {
+                    const pct = Math.round((score / total) * 100);
+                    mockUsers[uIdx].quizzesTaken++;
+                    
+                    if (!mockUsers[uIdx].levelProgress[finalSub]) {
+                        mockUsers[uIdx].levelProgress[finalSub] = {};
+                    }
+                    
+                    const currentProgress = mockUsers[uIdx].levelProgress[finalSub][finalLvl] || 0;
+                    mockUsers[uIdx].levelProgress[finalSub][finalLvl] = Math.max(currentProgress, pct);
+                    
+                    const newAttempt = {
+                        subject: finalSub,
+                        level: finalLvl,
+                        score: pct,
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString(),
+                        duration: "External HTML Quiz",
+                        rawScore: `${score}/${total}`
+                    };
+                    
+                    mockUsers[uIdx].lastAttemptDetails = newAttempt;
+
+                    if (!mockUsers[uIdx].testHistory) mockUsers[uIdx].testHistory = [];
+                    mockUsers[uIdx].testHistory.unshift(newAttempt);
+                    
+                    saveUsers();
+                    
+                    alertMessage(`External Quiz Recorded: ${score}/${total} (${pct}%)`, "bg-green-500");
+                    
+                    if (currentSubject === finalSub) {
+                        renderSubjectLevels(finalSub);
+                    }
+                    
+                    if (headerTitle.textContent.includes("Admin Dashboard")) {
+                        renderAdminDashboard();
+                    }
+                }
+            }
+        });
+        
+        renderAuthScreen();
+    });
+
+    // ==== USER LISTING FUNCTIONS ====
+    function openUserListModal(type = 'all') {
+        const modal = document.getElementById('userListModal');
+        const title = document.getElementById('userListTitle');
+        const container = document.getElementById('userListContainer');
+        const totalCount = document.getElementById('totalUsersCount');
+        const studentCount = document.getElementById('studentUsersCount');
+        
+        let filteredUsers = [];
+        let modalTitle = '';
+        
+        switch(type) {
+            case 'all':
+                filteredUsers = mockUsers;
+                modalTitle = 'All Users';
+                break;
+            case 'students':
+                filteredUsers = mockUsers.filter(u => u.role !== 'admin');
+                modalTitle = 'Student Users';
+                break;
+            case 'admins':
+                filteredUsers = mockUsers.filter(u => u.role === 'admin');
+                modalTitle = 'Admin Users';
+                break;
+            default:
+                filteredUsers = mockUsers;
+                modalTitle = 'All Users';
+        }
+        
+        title.textContent = `${modalTitle} (${filteredUsers.length})`;
+        totalCount.textContent = mockUsers.length;
+        studentCount.textContent = mockUsers.filter(u => u.role !== 'admin').length;
+        
+        if (filteredUsers.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-gray-500">
+                    <i class="fas fa-users text-2xl mb-2"></i>
+                    <p>No users found.</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = filteredUsers.map((user, index) => {
+                const isAdmin = user.role === 'admin';
+                const testCount = user.testHistory ? user.testHistory.length : 0;
+                const lastAttempt = user.lastAttemptDetails || {};
+                const avgScore = testCount > 0 && user.testHistory ? 
+                    Math.round(user.testHistory.reduce((sum, test) => sum + (test.score || 0), 0) / testCount) : 0;
+                
+                // Format date
+                let createdAt = 'Unknown';
+                if (user.createdAt) {
+                    const date = new Date(user.createdAt);
+                    createdAt = date.toLocaleDateString();
+                }
+                
+                return `
+                    <div class="user-list-item">
+                        <div class="flex-grow">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full ${isAdmin ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'} flex items-center justify-center mr-2">
+                                    <i class="fas ${isAdmin ? 'fa-user-shield' : 'fa-user-graduate'} text-xs"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-800 text-sm">${user.name} ${isAdmin ? '<span class="text-red-500 text-xs">(Admin)</span>' : ''}</div>
+                                    <div class="text-[10px] text-gray-500">${user.email}</div>
+                                </div>
+                            </div>
+                            <div class="mt-2 grid grid-cols-3 gap-1 text-[10px]">
+                                <span class="bg-gray-100 px-2 py-1 rounded text-center">${testCount} tests</span>
+                                <span class="bg-green-100 px-2 py-1 rounded text-center">${avgScore}% avg</span>
+                                <span class="bg-blue-100 px-2 py-1 rounded text-center">Joined: ${createdAt}</span>
+                            </div>
+                            ${lastAttempt.subject ? `
+                            <div class="mt-1 text-[10px] text-gray-500">
+                                <i class="fas fa-history mr-1"></i> Last: ${lastAttempt.subject} Lvl ${lastAttempt.level} (${lastAttempt.score}%)
+                            </div>
+                            ` : ''}
+                        </div>
+                        ${!isAdmin ? `
+                        <button type="button" onclick="deleteUserFromList('${user.email}', event)" 
+                                class="text-red-500 hover:text-red-700 p-1 ml-2" title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        modal.style.display = 'flex';
+    }
+    
+    function closeUserList() {
+        document.getElementById('userListModal').style.display = 'none';
+    }
+    
+    function deleteUserFromList(email, event) {
+        if (event) event.stopPropagation();
+        
+        if (confirm("Are you sure you want to delete this user? All their progress will be lost.")) {
+            const userIndex = mockUsers.findIndex(u => u.email === email);
+            if (userIndex !== -1) {
+                // If deleting current user, sign them out
+                if (currentUser && currentUser.email === email) {
+                    isAuthenticated = false;
+                    currentUser = null;
+                    renderAuthScreen();
+                }
+                
+                mockUsers.splice(userIndex, 1);
+                saveUsers();
+                alertMessage("User deleted successfully", "bg-green-500");
+                
+                // Refresh the user list
+                openUserListModal('all');
+                
+                // If we're on admin dashboard, refresh it
+                if (headerTitle.textContent.includes("Admin Dashboard")) {
+                    renderAdminDashboard();
+                }
+            }
+        }
+    }
+    
+    function exportUserData() {
+        const exportData = mockUsers.map(user => ({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            grade: user.grade,
+            quizzesTaken: user.quizzesTaken,
+            createdAt: user.createdAt || 'Unknown',
+            lastLogin: user.lastLogin || 'Never',
+            testHistoryCount: user.testHistory ? user.testHistory.length : 0,
+            subjectsProgress: Object.keys(user.levelProgress || {}).join(', ')
+        }));
+        
+        const csvContent = [
+            ['Name', 'Email', 'Role', 'Grade', 'Quizzes Taken', 'Created At', 'Last Login', 'Test History Count', 'Subjects Progress'],
+            ...exportData.map(user => [
+                user.name,
+                user.email,
+                user.role,
+                user.grade,
+                user.quizzesTaken,
+                user.createdAt,
+                user.lastLogin,
+                user.testHistoryCount,
+                user.subjectsProgress
+            ])
+        ].map(row => row.join(',')).join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sofanit_users_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alertMessage("User data exported as CSV", "bg-green-500");
+    }
+
+    // ==== SUBJECT MANAGEMENT FUNCTIONS ====
+    function loadSubjects() {
+        const savedSubjects = localStorage.getItem(SUBJECTS_KEY);
+        if (savedSubjects) {
+            subjects = JSON.parse(savedSubjects);
+        } else {
+            subjects = [...DEFAULT_SUBJECTS];
+            saveSubjects();
+        }
+    }
+    
+    function saveSubjects() {
+        localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+    }
+    
+    function updateSubjectSelects() {
+        const subjectSelects = [
+            'uploadSubject',
+            'manualSubject',
+            'resourceSubject'
+        ];
+        
+        subjectSelects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.innerHTML = subjects.map(subject => 
+                    `<option value="${subject}">${subject}</option>`
+                ).join('');
+            }
+        });
+    }
+    
+    function addNewSubject() {
+        const newSubjectInput = document.getElementById('newSubjectName');
+        const subjectName = newSubjectInput.value.trim();
+        
+        if (!subjectName) {
+            alertMessage("Please enter a subject name", "bg-red-500");
+            return;
+        }
+        
+        if (subjects.includes(subjectName)) {
+            alertMessage(`Subject "${subjectName}" already exists`, "bg-red-500");
+            return;
+        }
+        
+        if (subjectName.length > 50) {
+            alertMessage("Subject name too long (max 50 characters)", "bg-red-500");
+            return;
+        }
+        
+        subjects.push(subjectName);
+        saveSubjects();
+        
+        if (!quizData[subjectName]) {
+            quizData[subjectName] = {};
+        }
+        if (!resources[subjectName]) {
+            resources[subjectName] = {};
+        }
+        
+        saveQuizData();
+        saveResourcesMeta();
+        
+        renderSubjectManagementList();
+        updateSubjectSelects();
+        
+        newSubjectInput.value = '';
+        
+        alertMessage(`Subject "${subjectName}" added successfully`, "bg-green-500");
+    }
+    
+    function renameSubject(oldName, newName) {
+        if (oldName === newName) return;
+        
+        if (!subjects.includes(oldName)) {
+            alertMessage("Subject not found", "bg-red-500");
+            return;
+        }
+        
+        if (subjects.includes(newName)) {
+            alertMessage(`Subject "${newName}" already exists`, "bg-red-500");
+            return;
+        }
+        
+        pendingSubjectChanges.push({
+            type: 'rename',
+            oldName: oldName,
+            newName: newName
+        });
+        
+        const index = subjects.indexOf(oldName);
+        subjects[index] = newName;
+        renderSubjectManagementList();
+        updateSubjectSelects();
+        
+        alertMessage(`Subject will be renamed from "${oldName}" to "${newName}"`, "bg-blue-500");
+    }
+    
+    function deleteSubject(subjectName) {
+        if (!subjects.includes(subjectName)) {
+            alertMessage("Subject not found", "bg-red-500");
+            return;
+        }
+        
+        let hasContent = false;
+        let contentDetails = [];
+        
+        if (quizData[subjectName]) {
+            const questionCount = Object.values(quizData[subjectName]).reduce((sum, level) => sum + (level.length || 0), 0);
+            if (questionCount > 0) {
+                hasContent = true;
+                contentDetails.push(`${questionCount} questions`);
+            }
+        }
+        
+        if (resources[subjectName]) {
+            let resourceCount = 0;
+            Object.values(resources[subjectName]).forEach(level => {
+                if (level.pdfs) resourceCount += level.pdfs.length;
+                if (level.videos) resourceCount += level.videos.length;
+            });
+            if (resourceCount > 0) {
+                hasContent = true;
+                contentDetails.push(`${resourceCount} resources`);
+            }
+        }
+        
+        let userProgressCount = 0;
+        mockUsers.forEach(user => {
+            if (user.levelProgress && user.levelProgress[subjectName]) {
+                userProgressCount += Object.keys(user.levelProgress[subjectName]).length;
+            }
+        });
+        if (userProgressCount > 0) {
+            hasContent = true;
+            contentDetails.push(`${userProgressCount} user progress records`);
+        }
+        
+        if (hasContent) {
+            alertMessage(
+                `Cannot delete "${subjectName}" because it contains: ${contentDetails.join(', ')}. ` +
+                `Please remove all content first.`,
+                "bg-red-500"
+            );
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to delete subject "${subjectName}"?`)) {
+            return;
+        }
+        
+        pendingSubjectChanges.push({
+            type: 'delete',
+            subjectName: subjectName
+        });
+        
+        subjects = subjects.filter(s => s !== subjectName);
+        renderSubjectManagementList();
+        updateSubjectSelects();
+        
+        alertMessage(`Subject "${subjectName}" will be deleted`, "bg-blue-500");
+    }
+    
+    function saveSubjectChanges() {
+        pendingSubjectChanges.forEach(change => {
+            if (change.type === 'rename') {
+                if (quizData[change.oldName]) {
+                    quizData[change.newName] = quizData[change.oldName];
+                    delete quizData[change.oldName];
+                }
+                
+                if (resources[change.oldName]) {
+                    resources[change.newName] = resources[change.oldName];
+                    delete resources[change.oldName];
+                }
+                
+                mockUsers.forEach(user => {
+                    if (user.levelProgress && user.levelProgress[change.oldName]) {
+                        user.levelProgress[change.newName] = user.levelProgress[change.oldName];
+                        delete user.levelProgress[change.oldName];
+                    }
+                    
+                    if (user.testHistory) {
+                        user.testHistory.forEach(test => {
+                            if (test.subject === change.oldName) {
+                                test.subject = change.newName;
+                            }
+                        });
+                    }
+                    
+                    if (user.lastAttemptDetails && user.lastAttemptDetails.subject === change.oldName) {
+                        user.lastAttemptDetails.subject = change.newName;
+                    }
+                });
+                
+            } else if (change.type === 'delete') {
+                delete quizData[change.subjectName];
+                delete resources[change.subjectName];
+                
+                mockUsers.forEach(user => {
+                    if (user.levelProgress) {
+                        delete user.levelProgress[change.subjectName];
+                    }
+                    
+                    if (user.testHistory) {
+                        user.testHistory = user.testHistory.filter(test => test.subject !== change.subjectName);
+                    }
+                    
+                    if (user.lastAttemptDetails && user.lastAttemptDetails.subject === change.subjectName) {
+                        user.lastAttemptDetails = {};
+                    }
+                });
+            }
+        });
+        
+        pendingSubjectChanges = [];
+        
+        saveSubjects();
+        saveQuizData();
+        saveResourcesMeta();
+        saveUsers();
+        
+        if (currentSubject && !subjects.includes(currentSubject)) {
+            currentSubject = subjects[0] || '';
+            renderWelcomeScreen();
+        }
+        
+        closeSubjectManagement();
+        alertMessage("Subject changes saved successfully", "bg-green-500");
+    }
+    
+    function openSubjectManagement() {
+        document.getElementById('subjectManagementModal').style.display = 'flex';
+        renderSubjectManagementList();
+    }
+    
+    function closeSubjectManagement() {
+        document.getElementById('subjectManagementModal').style.display = 'none';
+        pendingSubjectChanges = [];
+        loadSubjects();
+        updateSubjectSelects();
+    }
+    
+    function renderSubjectManagementList() {
+        const container = document.getElementById('subjectListContainer');
+        if (!container) return;
+        
+        if (subjects.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-gray-500">
+                    <i class="fas fa-book text-2xl mb-2"></i>
+                    <p>No subjects yet. Add your first subject above!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = subjects.map((subject, index) => {
+            let hasContent = false;
+            if (quizData[subject]) {
+                const questionCount = Object.values(quizData[subject]).reduce((sum, level) => sum + (level.length || 0), 0);
+                if (questionCount > 0) hasContent = true;
+            }
+            
+            return `
+                <div class="subject-management-item">
+                    <div class="flex-grow">
+                        <div class="font-bold text-gray-800">${subject}</div>
+                        <div class="text-xs text-gray-500">
+                            ${hasContent ? '<i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i> Contains content' : '<i class="fas fa-check-circle text-green-500 mr-1"></i> Empty'}
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="editSubjectName('${subject}')" 
+                                class="text-blue-500 hover:text-blue-700 p-1" title="Rename">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" onclick="deleteSubject('${subject}')" 
+                                class="text-red-500 hover:text-red-700 p-1 ${hasContent ? 'opacity-50 cursor-not-allowed' : ''}" 
+                                title="${hasContent ? 'Cannot delete - contains content' : 'Delete'}" 
+                                ${hasContent ? 'disabled' : ''}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function editSubjectName(oldName) {
+        const newName = prompt(`Rename "${oldName}" to:`, oldName);
+        if (newName && newName.trim() && newName !== oldName) {
+            renameSubject(oldName, newName.trim());
+        }
+    }
+    
+    function openSubjectManagementFromUploader() {
+        closeBulkUploader();
+        setTimeout(() => openSubjectManagement(), 100);
+    }
+    
+    function openSubjectManagementFromManual() {
+        closeManualExamCreator();
+        setTimeout(() => openSubjectManagement(), 100);
+    }
+    
+    function openSubjectManagementFromResource() {
+        closeResourceUploader();
+        setTimeout(() => openSubjectManagement(), 100);
+    }
+
+    // ==== DATA MANAGEMENT ====
+    function loadUsers() {
+        const users = localStorage.getItem(STORAGE_KEY);
+        if (users) mockUsers = JSON.parse(users);
+        mockUsers.forEach(u => {
+            if(!u.testHistory) u.testHistory = [];
+        });
+    }
+    
+    function saveUsers() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUsers));
+    }
+    
+    function loadSettings() {
+        const settings = localStorage.getItem(SETTINGS_KEY);
+        if (settings) quizSettings = JSON.parse(settings);
+        if(!quizSettings.minutesPerQuestion || quizSettings.minutesPerQuestion <= 0) quizSettings.minutesPerQuestion = 1;
+    }
+    
+    function saveSettings() {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(quizSettings));
+    }
+    
+    function loadQuizData() {
+        const data = localStorage.getItem(QUIZ_DATA_KEY);
+        if (data) {
+            const savedData = JSON.parse(data);
+            
+            if (savedData.Math && savedData.Reading && savedData.Science && savedData["Computer Science"]) {
+                quizData = savedData;
+            } else {
+                quizData = savedData;
+                
+                subjects.forEach(subject => {
+                    if (!quizData[subject]) {
+                        quizData[subject] = {};
+                    }
+                });
+            }
+        } else {
+            subjects.forEach(subject => {
+                quizData[subject] = {};
+            });
+        }
+    }
+    
+    function saveQuizData() {
+        localStorage.setItem(QUIZ_DATA_KEY, JSON.stringify(quizData));
+    }
+    
+    function loadResources() {
+        const res = localStorage.getItem(RESOURCES_KEY);
+        if (res) {
+            resources = JSON.parse(res);
+            
+            subjects.forEach(subject => {
+                if (!resources[subject]) {
+                    resources[subject] = {};
+                }
+            });
+        } else {
+            subjects.forEach(subject => {
+                resources[subject] = {};
+            });
+        }
+    }
+    
+    function saveResourcesMeta() {
+        localStorage.setItem(RESOURCES_KEY, JSON.stringify(resources));
+    }
+
+    // ==== RESOURCE HANDLING WITH INDEXEDDB ====
+    async function openResource(id) {
+        alertMessage("Opening resource...", "bg-blue-500");
+        try {
+            const fileBlob = await getFileFromDB(id);
+            if (fileBlob) {
+                const url = URL.createObjectURL(fileBlob);
+                window.open(url, '_blank');
+            } else {
+                alertMessage("Resource not found locally.", "bg-red-500");
+            }
+        } catch (e) {
+            console.error(e);
+            alertMessage("Error opening resource.", "bg-red-500");
+        }
+    }
+
+    // ==== GLOBAL RESOURCE MENU SYSTEM ====
+    function openGlobalMenu(btn, event, subject, level, type, index) {
+        if (event) event.stopPropagation();
+        
+        const menu = document.getElementById('globalResourceMenu');
+        
+        menu.innerHTML = `
+            <button onclick="renameResource('${subject}', '${level}', '${type}', ${index}, event)">
+                <i class="fas fa-edit"></i> Rename
+            </button>
+            <button onclick="deleteResource('${subject}', '${level}', '${type}', ${index}, event)" class="text-red-500 font-bold">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        `;
+        
+        const rect = btn.getBoundingClientRect();
+        menu.style.display = 'block';
+        menu.style.top = `${rect.bottom + 5}px`;
+        
+        const menuWidth = 140;
+        let leftPos = rect.right - menuWidth;
+        if (leftPos < 5) leftPos = 5; 
+        
+        menu.style.left = `${leftPos}px`;
+        
+        setTimeout(() => {
+            const closeMenuHandler = function(e) {
+                if (!menu.contains(e.target) && e.target !== btn) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', closeMenuHandler);
+                }
+            };
+            document.addEventListener('click', closeMenuHandler);
+        }, 10);
+    }
+
+    function renameResource(subject, level, type, index, event) {
+        if (event) event.stopPropagation();
+        document.getElementById('globalResourceMenu').style.display = 'none';
+        
+        const item = resources[subject][level][type][index];
+        const newName = prompt("Rename resource to:", item.name);
+        if(newName && newName.trim() !== "") {
+            resources[subject][level][type][index].name = newName.trim();
+            saveResourcesMeta();
+            renderSubjectLevels(subject);
+        }
+    }
+
+    function deleteResource(subject, level, type, index, event) {
+        if (event) event.stopPropagation();
+        document.getElementById('globalResourceMenu').style.display = 'none';
+        
+        if(confirm("Are you sure you want to delete this file?")) {
+            resources[subject][level][type].splice(index, 1);
+            saveResourcesMeta();
+            renderSubjectLevels(subject);
+        }
+    }
+
+    // ==== UI RENDERING FUNCTIONS ====
+    function renderAuthScreen() {
+        headerTitle.textContent = "Welcome! Sign In";
+        quizApp.innerHTML = `
+            <div class="space-y-6 flex flex-col h-full justify-center">
+                <h3 class="text-xl text-blue-600 font-bold text-center">Log in to Start Learning</h3>
+                <form onsubmit="event.preventDefault(); handleSignIn()">
+                    <div class="space-y-3">
+                        <input type="email" id="signInUsername" placeholder="Your Email" required 
+                               class="w-full p-3 border-2 border-blue-300 rounded-lg text-base">
+                        <input type="password" id="signInPassword" placeholder="Password" required 
+                               class="w-full p-3 border-2 border-blue-300 rounded-lg text-base">
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl text-lg mt-6 shadow-md transition transform hover:scale-105">
+                        Sign In
+                    </button>
+                </form>
+                <div class="text-center mt-4">
+                    <button onclick="renderSignUpForm()" class="text-blue-500 underline font-semibold hover:text-blue-700 text-sm">
+                        Create an Account
+                    </button>
+                </div>
+            </div>`;
+    }
+
+    function renderSignUpForm() {
+        headerTitle.textContent = "Create Account";
+        quizApp.innerHTML = `
+            <div class="space-y-6 flex flex-col h-full justify-center">
+                <h3 class="text-xl text-blue-600 font-bold text-center">Join the Fun!</h3>
+                <form onsubmit="event.preventDefault(); handleSignUp()">
+                    <div class="space-y-3">
+                        <input type="text" id="signUpName" placeholder="Your Name" required 
+                               class="w-full p-3 border-2 border-blue-300 rounded-lg text-base">
+                        <input type="email" id="signUpUsername" placeholder="Your Email" required 
+                               class="w-full p-3 border-2 border-blue-300 rounded-lg text-base">
+                        <input type="password" id="signUpPassword" placeholder="Password" required 
+                               class="w-full p-3 border-2 border-blue-300 rounded-lg text-base">
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg mt-6">
+                        Sign Up
+                    </button>
+                </form>
+                <div class="text-center mt-4">
+                    <button onclick="renderAuthScreen()" class="text-blue-500 hover:text-blue-700 font-semibold underline text-sm">
+                        ← Back to Sign In
+                    </button>
+                </div>
+            </div>`;
+    }
+
+    function handleSignIn() {
+        const email = document.getElementById('signInUsername').value;
+        const password = document.getElementById('signInPassword').value;
+        const user = mockUsers.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+            isAuthenticated = true;
+            currentUser = user;
+            
+            // Update last login time
+            const userIndex = mockUsers.findIndex(u => u.email === email);
+            if (userIndex !== -1) {
+                mockUsers[userIndex].lastLogin = new Date().toISOString();
+                saveUsers();
+            }
+            
+            if(!currentUser.testHistory) currentUser.testHistory = [];
+            alertMessage(`Welcome back, ${currentUser.name}!`, 'bg-green-500');
+            renderWelcomeScreen();
+        } else {
+            alertMessage('Sign In failed. Check credentials.', 'bg-red-500');
+        }
+    }
+
+    function handleSignUp() {
+        const name = document.getElementById('signUpName').value.trim();
+        const email = document.getElementById('signUpUsername').value;
+        const password = document.getElementById('signUpPassword').value;
+        
+        if (!name || !email || !password) return alertMessage('All fields required', 'bg-red-500');
+        if (mockUsers.some(u => u.email === email)) return alertMessage('Email exists', 'bg-red-500');
+        
+        const newUser = {
+            username: name.replace(/\s/g, '').toLowerCase(),
+            password: password,
+            name: name,
+            email: email,
+            grade: "1st Grade",
+            quizzesTaken: 0,
+            lastAttempt: null,
+            levelProgress: {},
+            lastAttemptDetails: {},
+            testHistory: [],
+            role: "student",
+            createdAt: new Date().toISOString(),
+            lastLogin: null
+        };
+        
+        mockUsers.push(newUser);
+        saveUsers();
+        isAuthenticated = true;
+        currentUser = newUser;
+        alertMessage("Account Created!", 'bg-blue-500');
+        renderWelcomeScreen();
+    }
+
+    function handleSignOut() {
+        isAuthenticated = false;
+        currentUser = null;
+        renderAuthScreen();
+    }
+
+    function renderWelcomeScreen() {
+        if (!isAuthenticated) return renderAuthScreen();
+        headerTitle.textContent = `Welcome, ${currentUser.name}!`;
+        
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center px-1 mb-2">
+                     <button onclick="renderStudentProfile()" class="text-blue-600 font-bold text-sm bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-full flex items-center">
+                        <i class="fas fa-user-graduate mr-2"></i> My Profile
+                     </button>
+                </div>
+                
+                <div class="flex-grow flex flex-col justify-center space-y-4">
+                    <h3 class="text-xl text-blue-600 font-bold text-center mb-2">Choose a Subject</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${subjects.map(subject => `
+                            <button onclick="renderSubjectLevels('${subject}')" 
+                                    class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-md transition duration-200 text-base border-2 border-yellow-600 transform hover:scale-105 flex flex-col items-center justify-center">
+                                <i class="fas fa-book mb-1 opacity-60 text-lg"></i>
+                                ${subject}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    ${currentUser.role === 'admin' ? `
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-xs text-gray-500 uppercase font-bold text-center mb-2">Admin Tools</p>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="openBulkUploader()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded text-xs flex flex-col items-center"><i class="fas fa-file-upload mb-1"></i> Bulk</button>
+                            <button onclick="openManualExamCreator()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded text-xs flex flex-col items-center"><i class="fas fa-edit mb-1"></i> Manual</button>
+                            <button onclick="openResourceUploader()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 rounded text-xs flex flex-col items-center"><i class="fas fa-folder-open mb-1"></i> Res.</button>
+                            <button onclick="openSubjectManagement()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 rounded text-xs flex flex-col items-center"><i class="fas fa-book mb-1"></i> Subjects</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <button onclick="handleSignOut()" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-4 text-sm">Sign Out</button>
+            </div>`;
+    }
+
+    function renderStudentProfile() {
+        if (!isAuthenticated) return renderAuthScreen();
+        headerTitle.textContent = "My Profile";
+        
+        const history = currentUser.testHistory || [];
+        const avgScore = history.length > 0 ? Math.round(history.reduce((a, b) => a + (b.score || 0), 0) / history.length) : 0;
+
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full">
+                <button onclick="renderWelcomeScreen()" class="self-start px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg text-xs mb-3">← Back</button>
+                
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-4 flex items-center space-x-4">
+                    <div class="bg-blue-100 rounded-full p-3 text-blue-600 text-2xl">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">${currentUser.name}</h2>
+                        <p class="text-xs text-gray-500">${currentUser.email}</p>
+                        <div class="flex space-x-3 mt-2">
+                            <span class="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">Tests: ${history.length}</span>
+                            <span class="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Avg: ${avgScore}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Test History</h3>
+                
+                <div class="flex-grow overflow-y-auto space-y-2 pb-2">
+                    ${history.length === 0 ? 
+                        `<div class="text-center text-gray-400 py-10 flex flex-col items-center">
+                            <i class="fas fa-history text-3xl mb-2"></i>
+                            <p>No tests taken yet!</p>
+                         </div>` : 
+                        history.map(test => `
+                        <div class="bg-white border-l-4 ${test.score >= 80 ? 'border-green-500' : (test.score >= 50 ? 'border-yellow-500' : 'border-red-500')} rounded-r-lg shadow-sm p-3 hover:shadow-md transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm">${test.subject} <span class="text-xs font-normal text-gray-500">Level ${test.level}</span></p>
+                                    <p class="text-[10px] text-gray-400 mt-1"><i class="far fa-clock"></i> ${test.date} ${test.time ? `at ${test.time}` : ''}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold ${test.score >= 80 ? 'text-green-600' : 'text-gray-700'}">${test.score}%</p>
+                                    <p class="text-[10px] text-gray-500">${test.scoreRaw || ''}</p>
+                                </div>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-gray-100 flex justify-between text-[10px] text-gray-500">
+                                <span><i class="fas fa-stopwatch text-blue-400"></i> Time Taken: ${test.duration || 'N/A'}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSubjectLevels(subject) {
+        if (!isAuthenticated) return renderAuthScreen();
+        currentSubject = subject;
+        headerTitle.textContent = `${subject} - Levels`;
+        
+        const subRes = resources[subject] || {};
+        const getResList = (level, type) => {
+            if(subRes[level] && subRes[level][type] && Array.isArray(subRes[level][type])) {
+                return subRes[level][type];
+            }
+            return [];
+        };
+        
+        let hasAnyRes = false;
+        for(let i=1; i<=10; i++) {
+            if(getResList(i, 'pdfs').length > 0 || getResList(i, 'videos').length > 0) hasAnyRes = true;
+        }
+        
+        // Close menus when clicking outside
+        quizApp.onclick = function(event) {
+            if (!event.target.closest('.resource-item') && !event.target.closest('#globalResourceMenu')) {
+                document.getElementById('globalResourceMenu').style.display = 'none';
+            }
+        };
+        
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center mb-3">
+                    <button onclick="renderWelcomeScreen()" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg text-xs">← Back</button>
+                    ${currentUser.role === 'admin' ? `
+                    <div class="flex space-x-1">
+                        <button onclick="openManualExamCreatorForSubject('${subject}')" class="px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded"><i class="fas fa-plus"></i> Q's</button>
+                        <button onclick="openResourceUploaderForSubject('${subject}')" class="px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded"><i class="fas fa-upload"></i> Res</button>
+                    </div>` : ''}
+                </div>
+
+                ${hasAnyRes ? `
+           <div class="learning-materials bg-blue-50 p-2 rounded-lg border border-blue-200 mb-3 shadow-inner">
+
+                    <h4 class="font-bold text-blue-800 text-[10px] uppercase mb-1 sticky top-0 bg-blue-50 py-1 border-b border-blue-100 z-10"><i class="fas fa-book-reader mr-1"></i> Learning Materials</h4>
+                    <div class="space-y-1">
+                        ${[1,2,3,4,5,6,7,8,9,10].map(level => {
+                            const pdfs = getResList(level, 'pdfs');
+                            const videos = getResList(level, 'videos');
+                            if(pdfs.length === 0 && videos.length === 0) return '';
+                            return `
+                            <div class="bg-white rounded border border-gray-200" style="overflow:visible;">
+                                <div class="bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-600">Level ${level}</div>
+                                ${pdfs.map((pdf, idx) => `
+                                    <div class="resource-item w-full flex items-center hover:bg-gray-50 text-red-600 relative">
+                                        <button type="button" onclick="openResourceWithTracking('${pdf.id}', '${pdf.name}', '${subject}', ${level})" class="flex-grow text-left flex items-center truncate">
+                                            <i class="fas ${pdf.name.endsWith('.html') || pdf.name.endsWith('.htm') ? 'fa-globe' : (pdf.name.endsWith('.zip') ? 'fa-file-archive' : 'fa-file-pdf')} mr-2 w-4"></i> 
+                                            <span class="truncate w-32">${pdf.name}</span>
+                                        </button>
+                                        ${currentUser.role === 'admin' ? `
+                                        <button type="button" onclick="event.stopPropagation(); openGlobalMenu(this, event, '${subject}', ${level}, 'pdfs', ${idx})" class="text-red-500 hover:text-red-700 px-2 font-bold text-lg">⋮</button>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                                ${videos.map((vid, idx) => `
+                                    <div class="resource-item w-full flex items-center hover:bg-gray-50 text-blue-600 relative">
+                                        <button type="button" onclick="openResourceWithTracking('${vid.id}', '${vid.name}', '${subject}', ${level})" class="flex-grow text-left flex items-center truncate">
+                                            <i class="fas fa-video mr-2 w-4"></i> 
+                                            <span class="truncate w-32">${vid.name}</span>
+                                        </button>
+                                        ${currentUser.role === 'admin' ? `
+                                        <button type="button" onclick="event.stopPropagation(); openGlobalMenu(this, event, '${subject}', ${level}, 'videos', ${idx})" class="text-red-500 hover:text-red-700 px-2 font-bold text-lg">⋮</button>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>` : ''}
+
+                <div class="grid grid-cols-5 gap-2 overflow-y-auto p-2 bg-gray-50 rounded-lg border flex-grow content-start">
+                    ${[1,2,3,4,5,6,7,8,9,10].map(level => {
+                        const count = quizData[subject]?.[level]?.length || 0;
+                        const progress = currentUser.levelProgress?.[subject]?.[level] || 0;
+                        const pdfs = getResList(level, 'pdfs');
+                        const videos = getResList(level, 'videos');
+                        const hasRes = pdfs.length > 0 || videos.length > 0;
+                        
+                        let colorClass = count === 0 ? "bg-gray-100 text-gray-400 border-gray-200" : (progress >= 80 ? "bg-green-100 text-green-700 border-green-300" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50");
+                        
+                        return `
+                        <button onclick="startQuiz('${subject}', ${level})" class="border-2 rounded-lg p-1 h-16 flex flex-col items-center justify-center relative transition transform hover:scale-105 ${colorClass}">
+                            <span class="text-xs font-bold">Lvl ${level}</span>
+                            <span class="text-[9px] opacity-75">${count} Qs</span>
+                            ${hasRes ? '<i class="fas fa-paperclip absolute top-1 right-1 text-[8px] text-purple-500"></i>' : ''}
+                            ${progress > 0 ? `<div class="absolute bottom-1 w-3/4 h-1 bg-gray-200 rounded-full overflow-hidden"><div class="bg-green-500 h-full" style="width: ${Math.min(progress, 100)}%"></div></div>` : ''}
+                        </button>`;
+                    }).join('')}
+                </div>
+            </div>`;
+    }
+
+    function startQuiz(subject, level) {
+        const questions = quizData[subject]?.[level] || [];
+        if (questions.length === 0) return alertMessage("No questions yet!", "bg-yellow-500");
+        currentSubject = subject;
+        currentLevel = level;
+        currentQuestionIndex = 0;
+        score = 0;
+        startTime = new Date(); 
+        startTimer();
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        isAnswered = false; 
+        selectedOptions = [];
+        const questions = quizData[currentSubject][currentLevel];
+        if (currentQuestionIndex >= questions.length) return renderResults();
+        
+        const q = questions[currentQuestionIndex];
+        const isMulti = q.type === 'checkbox' || (q.type === 'checkbox' && q.options.length > 2);
+        
+        headerTitle.textContent = `${currentSubject} L${currentLevel} | ${currentQuestionIndex + 1}/${questions.length}`;
+        
+        let optionsHtml = '';
+        let buttonHtml = '';
+
+        if (isMulti) {
+             optionsHtml = `
+                <div class="space-y-3">
+                    ${q.options.map((opt, i) => `
+                        <label class="flex items-center w-full p-3 bg-blue-50 text-blue-800 font-medium rounded-lg border border-blue-200 hover:bg-blue-100 transition text-sm cursor-pointer" id="opt-label-${i}">
+                            <input type="checkbox" value="${opt}" onchange="toggleMultiSelect(this)" class="mr-3 h-4 w-4">
+                            ${opt}
+                        </label>
+                    `).join('')}
+                </div>`;
+                buttonHtml = `
+                <div class="flex justify-between border-t pt-4 mt-2">
+                    <button onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled class="opacity-50 cursor-not-allowed text-gray-400 font-bold text-xs"' : 'class="text-gray-600 hover:text-gray-900 font-bold text-xs"'}><i class="fas fa-arrow-left mr-1"></i> Prev</button>
+                    <button id="actionBtn" onclick="submitMultiAnswer()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-sm shadow">Check Answer</button>
+                </div>`;
+        } else {
+             optionsHtml = `
+                <div class="space-y-3">
+                    ${q.options.map((opt, i) => `
+                        <button onclick="selectAnswer('${opt}', this)" class="w-full p-3 bg-blue-50 text-blue-800 font-medium rounded-lg border border-blue-200 hover:bg-blue-100 transition text-left relative group text-sm">
+                            <span class="group-hover:pl-2 transition-all duration-200">${opt}</span>
+                        </button>
+                    `).join('')}
+                </div>`;
+                buttonHtml = `
+                <div class="flex justify-between border-t pt-4 mt-2">
+                    <button onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled class="opacity-50 cursor-not-allowed text-gray-400 font-bold text-xs"' : 'class="text-gray-600 hover:text-gray-900 font-bold text-xs"'}><i class="fas fa-arrow-left mr-1"></i> Prev</button>
+                    <button id="nextBtn" onclick="nextQuestion()" class="text-blue-600 hover:text-blue-800 font-bold text-xs hidden">Next <i class="fas fa-arrow-right ml-1"></i></button>
+                </div>`;
+        }
+
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <button onclick="renderSubjectLevels(currentSubject)" class="text-xs text-gray-500 hover:text-gray-800 mb-4">← Exit Quiz</button>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+                        <p class="text-lg font-bold text-gray-800 text-center">${q.question}</p>
+                    </div>
+                    ${optionsHtml}
+                    ${q.hint ? `<p class="mt-4 text-xs text-gray-500 text-center italic">Hint: ${q.hint}</p>` : ''}
+                </div>
+                ${buttonHtml}
+            </div>`;
+    }
+
+    function toggleMultiSelect(checkbox) {
+        if (checkbox.checked) selectedOptions.push(checkbox.value);
+        else selectedOptions = selectedOptions.filter(o => o !== checkbox.value);
+    }
+
+   function isAnswerCorrect(userAnswer, question) {
+    return normalizeText(userAnswer) === normalizeText(question.answer);
+}
+
+    function selectAnswer(ans, btn) {
+        if (isAnswered) return; 
+        isAnswered = true;
+        
+        const q = quizData[currentSubject][currentLevel][currentQuestionIndex];
+        
+        const isCorrect = isAnswerCorrect(ans, q);
+        
+        if (isCorrect) {
+            score++;
+            btn.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200', 'hover:bg-blue-100');
+            btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+        } else {
+            btn.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200', 'hover:bg-blue-100');
+            btn.classList.add('bg-red-500', 'text-white', 'border-red-600');
+            
+            setTimeout(() => {
+                const correctAnswer = String(q.answer).trim();
+                let correctOptionText = correctAnswer;
+                
+                if (/^\d+$/.test(correctAnswer)) {
+                    const index = parseInt(correctAnswer) - 1;
+                    if (index >= 0 && index < q.options.length) {
+                        correctOptionText = q.options[index];
+                    }
+                }
+                
+                const allButtons = document.querySelectorAll('button[onclick^="selectAnswer"]');
+                allButtons.forEach(button => {
+                    const buttonText = button.textContent.trim();
+                    if (normalizeText(buttonText) === normalizeText(correctOptionText)) {
+                        button.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200', 'hover:bg-blue-100');
+                        button.classList.remove('bg-red-500', 'text-white');
+                        button.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                    }
+                });
+            }, 500);
+        }
+        
+        const nextBtn = document.getElementById('nextBtn');
+        if(nextBtn) {
+            nextBtn.classList.remove('hidden');
+            nextBtn.classList.add('flex', 'items-center');
+        }
+    }
+    
+    function submitMultiAnswer() {
+        const btn = document.getElementById('actionBtn');
+        if (isAnswered) {
+            nextQuestion();
+            return;
+        }
+
+        isAnswered = true;
+        const q = quizData[currentSubject][currentLevel][currentQuestionIndex];
+        
+        let correctAnswerArray = [];
+        const correctAnswer = String(q.answer).trim();
+        
+        if (correctAnswer.includes(',') || correctAnswer.includes('|')) {
+            const separator = correctAnswer.includes(',') ? ',' : '|';
+            correctAnswerArray = correctAnswer.split(separator).map(a => normalizeText(a.trim()));
+        } else {
+            correctAnswerArray = [normalizeText(correctAnswer)];
+        }
+        
+        if (/^\d+([,|]\d+)*$/.test(correctAnswer)) {
+            const indices = correctAnswer.split(/[,|]/).map(num => parseInt(num.trim()) - 1);
+            correctAnswerArray = indices
+                .filter(idx => idx >= 0 && idx < q.options.length)
+                .map(idx => normalizeText(q.options[idx]));
+        }
+        
+        const userAnswers = selectedOptions.map(a => normalizeText(a));
+        
+        const sortedCorrect = [...correctAnswerArray].sort();
+        const sortedUser = [...userAnswers].sort();
+        
+        let isCorrect = sortedCorrect.length === sortedUser.length && 
+                        sortedCorrect.every((val, idx) => val === sortedUser[idx]);
+        
+        if (isCorrect) {
+            score++;
+            alertMessage("Correct!", "bg-green-500");
+        } else {
+            alertMessage("Incorrect", "bg-red-500");
+        }
+
+        q.options.forEach((opt, idx) => {
+             const label = document.getElementById(`opt-label-${idx}`);
+             const checkbox = label.querySelector('input[type="checkbox"]');
+             const isSelected = checkbox.checked;
+             const isOptionCorrect = sortedCorrect.includes(normalizeText(opt));
+
+             label.classList.remove('bg-blue-50', 'text-blue-800', 'border-blue-200', 'hover:bg-blue-100');
+
+             if (isSelected && isOptionCorrect) {
+                 label.classList.add('bg-green-500', 'text-white', 'border-green-600');
+             } else if (isSelected && !isOptionCorrect) {
+                 label.classList.add('bg-red-500', 'text-white', 'border-red-600');
+             } else if (!isSelected && isOptionCorrect) {
+                 label.classList.add('bg-green-500', 'text-white', 'border-green-600');
+             } else {
+                 label.classList.add('bg-gray-100', 'text-gray-500', 'border-gray-200');
+             }
+        });
+
+        btn.textContent = "Next ->";
+        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+    }
+    
+    function nextQuestion() {
+        currentQuestionIndex++;
+        renderQuestion();
+    }
+    
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            renderQuestion();
+        }
+    }
+
+    function renderResults() {
+        stopTimer();
+        const endTime = new Date();
+        const durationSec = Math.floor((endTime - startTime) / 1000);
+        
+        const total = quizData[currentSubject][currentLevel].length;
+        const pct = Math.round((score / total) * 100);
+        
+        const uIdx = mockUsers.findIndex(u => u.email === currentUser.email);
+        if (uIdx !== -1) {
+            mockUsers[uIdx].quizzesTaken++;
+            if (!mockUsers[uIdx].levelProgress[currentSubject]) mockUsers[uIdx].levelProgress[currentSubject] = {};
+            mockUsers[uIdx].levelProgress[currentSubject][currentLevel] = Math.max(mockUsers[uIdx].levelProgress[currentSubject][currentLevel] || 0, pct);
+            
+            const newAttempt = {
+                subject: currentSubject,
+                level: currentLevel,
+                score: pct,
+                date: endTime.toLocaleDateString(),
+                time: endTime.toLocaleTimeString(),
+                duration: `${Math.floor(durationSec / 60)}m ${durationSec % 60}s`,
+                scoreRaw: `${score}/${total}`
+            };
+
+            mockUsers[uIdx].lastAttemptDetails = newAttempt;
+
+            if (!mockUsers[uIdx].testHistory) mockUsers[uIdx].testHistory = [];
+            mockUsers[uIdx].testHistory.unshift(newAttempt);
+
+            saveUsers();
+        }
+
+        headerTitle.textContent = "Quiz Complete";
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full justify-center text-center space-y-5">
+                <div>
+                    <div class="text-6xl mb-2">${pct >= 80 ? '🏆' : '📚'}</div>
+                    <h3 class="text-2xl font-bold ${pct >= 80 ? 'text-green-600' : 'text-gray-700'}">${pct >= 80 ? 'Excellent!' : 'Good Practice!'}</h3>
+                    <p class="text-gray-500 text-sm">You scored</p>
+                    <p class="text-5xl font-black text-blue-600 my-2">${score}/${total}</p>
+                    <p class="text-lg font-bold text-gray-400">${pct}%</p>
+                </div>
+                <div class="space-y-2">
+                    ${pct < 80 ? `<button type="button" onclick="startQuiz('${currentSubject}', ${currentLevel})" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl shadow hover:bg-green-600">Try Again</button>` : ''}
+                    <button type="button" onclick="renderSubjectLevels('${currentSubject}')" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300">Back to Levels</button>
+                </div>
+            </div>`;
+    }
+
+    let timeLeft, timerInterval;
+    function startTimer() {
+        if (!quizSettings.timerEnabled) {
+            timerDisplay.classList.add('hidden');
+            return;
+        }
+        stopTimer();
+        const qCount = quizData[currentSubject][currentLevel].length;
+        timeLeft = qCount * (quizSettings.minutesPerQuestion * 60); 
+        timerDisplay.classList.remove('hidden');
+        updateTimerUI();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 0) {
+                stopTimer();
+                alertMessage("Time's up!", "bg-red-500");
+                renderResults();
+            }
+        }, 1000);
+    }
+    
+    function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerDisplay.classList.add('hidden');
+    }
+    
+    function updateTimerUI() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        timerDisplay.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        timerDisplay.className = `text-base font-bold px-3 py-1 rounded-full shadow-lg text-white mb-1 ${timeLeft < 30 ? 'bg-red-500' : (timeLeft < 60 ? 'bg-yellow-500' : 'bg-green-500')}`;
+    }
+
+    function openModal(id) {
+        document.getElementById('passwordModal').style.display = 'flex';
+        document.getElementById('modalContent').classList.remove('scale-95', 'opacity-0');
+        document.getElementById('modalContent').classList.add('scale-100', 'opacity-100');
+    }
+    
+    function closeModal() {
+        document.getElementById('passwordModal').style.display = 'none';
+    }
+    
+    function checkAdminPassword() {
+        if (document.getElementById('passwordInput').value === adminPassword) {
+            closeModal();
+            renderAdminDashboard();
+        } else {
+            document.getElementById('passwordError').classList.remove('hidden');
+        }
+    }
+    
+    function renderAdminDashboard() {
+        headerTitle.textContent = "Admin Dashboard";
+        const allUsers = mockUsers; 
+        const qTotal = Object.values(quizData).reduce((acc, sub) => acc + Object.values(sub).reduce((a, l) => a + l.length, 0), 0);
+        const totalStudents = mockUsers.filter(u => u.role !== 'admin').length;
+        
+        // Update subject dropdowns
+        updateSubjectSelects();
+        
+        quizApp.innerHTML = `
+            <div class="flex flex-col h-full relative">
+                <button type="button" onclick="renderWelcomeScreen()" class="absolute top-0 left-0 bg-gray-200 px-3 py-1 rounded text-xs font-bold hover:bg-gray-300">← Back</button>
+                
+                <div class="mt-8 grid grid-cols-2 gap-3 mb-4">
+                    <div onclick="openUserListModal('all')" class="dashboard-stat-card bg-blue-50 border border-blue-200 p-3 rounded-xl text-center cursor-pointer hover:bg-blue-100 transition">
+                        <div class="text-2xl font-bold text-blue-700">${mockUsers.length}</div>
+                        <div class="text-xs text-blue-500 uppercase font-bold">Total Users</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Click to view all</div>
+                    </div>
+                    <div onclick="showQuestionSummary()" class="dashboard-stat-card bg-green-50 border border-green-200 p-3 rounded-xl text-center cursor-pointer hover:bg-green-100 transition">
+                        <div class="text-2xl font-bold text-green-700">${qTotal}</div>
+                        <div class="text-xs text-green-500 uppercase font-bold">Total Questions</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Click for breakdown</div>
+                    </div>
+                    <div onclick="openUserListModal('students')" class="dashboard-stat-card bg-purple-50 border border-purple-200 p-3 rounded-xl text-center cursor-pointer hover:bg-purple-100 transition">
+                        <div class="text-2xl font-bold text-purple-700">${totalStudents}</div>
+                        <div class="text-xs text-purple-500 uppercase font-bold">Students</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Click to view students</div>
+                    </div>
+                    <div onclick="showSubjectSummary()" class="dashboard-stat-card bg-indigo-50 border border-indigo-200 p-3 rounded-xl text-center cursor-pointer hover:bg-indigo-100 transition">
+                        <div class="text-2xl font-bold text-indigo-700">${subjects.length}</div>
+                        <div class="text-xs text-indigo-500 uppercase font-bold">Subjects</div>
+                        <div class="text-[10px] text-gray-500 mt-1">Click for summary</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between space-x-2 mb-4">
+                    <button type="button" onclick="openBulkUploader()" class="flex-1 bg-blue-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-600"><i class="fas fa-file-csv mr-1"></i> Bulk</button>
+                    <button type="button" onclick="openManualExamCreator()" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-green-600"><i class="fas fa-edit mr-1"></i> Manual</button>
+                    <button type="button" onclick="openResourceUploader()" class="flex-1 bg-purple-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-purple-600"><i class="fas fa-photo-video mr-1"></i> Res</button>
+                    <button type="button" onclick="openSubjectManagement()" class="flex-1 bg-indigo-500 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-600"><i class="fas fa-book mr-1"></i> Subjects</button>
+                </div>
+                
+                <div class="bg-gray-50 border rounded-lg p-2 mb-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-700">Timer (Mins/Q)</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" id="adminTimerInput" value="${quizSettings.minutesPerQuestion}" class="w-12 p-1 border rounded text-center text-xs">
+                            <button onclick="updateTimerSettings()" class="bg-gray-700 text-white px-2 py-1 rounded text-xs">Set</button>
+                            <button onclick="toggleTimer()" class="px-2 py-1 rounded text-xs font-bold text-white ${quizSettings.timerEnabled ? 'bg-green-500' : 'bg-red-500'}">${quizSettings.timerEnabled ? 'ON' : 'OFF'}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <h4 class="text-sm font-bold text-red-700 mb-2">Danger Zone</h4>
+                    <p class="text-xs text-red-600 mb-3">Reset all quiz progress and scores</p>
+                    <button type="button" onclick="openResetQuizModal()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded text-sm flex items-center justify-center">
+                        <i class="fas fa-trash-alt mr-2"></i> Reset All Quiz Progress
+                    </button>
+                </div>
+
+                <div class="flex-grow flex flex-col min-h-0 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm" id="userManagementSection">
+                    <div class="bg-gray-100 p-2 border-b border-gray-200 flex justify-between items-center">
+                        <h4 class="font-bold text-gray-700 text-xs">User Management (${allUsers.length})</h4>
+                        <span class="text-[10px] text-gray-400">Scroll to view all</span>
+                    </div>
+                    <div class="overflow-y-auto p-2 space-y-2 flex-grow">
+                        ${allUsers.length === 0 ? '<p class="text-center text-gray-400 text-xs py-4">No users yet.</p>' : ''}
+                        ${allUsers.slice(0, 5).map(u => {
+                            const last = u.lastAttemptDetails;
+                            const lastAttemptStr = last && last.date ? 
+                                `Last: ${last.subject} Lvl ${last.level} (${last.score}%) - ${last.duration} on ${last.date}` : 
+                                'No attempts yet';
+                            const isAdmin = u.role === 'admin';
+                                
+                            return `
+                            <div class="flex justify-between items-center p-2 bg-white border border-gray-100 rounded-lg shadow-sm hover:bg-gray-50">
+                                <div>
+                                    <div class="font-bold text-gray-800 text-xs">${u.name} ${isAdmin ? '<span class="text-red-500">(Admin)</span>' : ''}</div>
+                                    <div class="text-[10px] text-gray-500">${u.email}</div>
+                                    <div class="text-[10px] text-blue-500 mt-1 font-semibold">${lastAttemptStr}</div>
+                                </div>
+                                ${!isAdmin ? `<button type="button" onclick="deleteUser('${u.email}')" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>` : ''}
+                            </div>
+                        `;}).join('')}
+                        ${allUsers.length > 5 ? `
+                            <div class="text-center pt-2">
+                                <button onclick="openUserListModal('all')" class="text-blue-500 text-xs font-bold hover:text-blue-700">
+                                    View All ${allUsers.length} Users →
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function showSubjectSummary() {
+        let summaryHtml = '<div class="text-left space-y-2">';
+        subjects.forEach(subject => {
+            let questionCount = 0;
+            let resourceCount = 0;
+            
+            if (quizData[subject]) {
+                questionCount = Object.values(quizData[subject]).reduce((sum, level) => sum + (level.length || 0), 0);
+            }
+            
+            if (resources[subject]) {
+                Object.values(resources[subject]).forEach(level => {
+                    if (level.pdfs) resourceCount += level.pdfs.length;
+                    if (level.videos) resourceCount += level.videos.length;
+                });
+            }
+            
+            summaryHtml += `
+                <div class="flex justify-between border-b pb-1 text-sm">
+                    <span>${subject}</span>
+                    <div class="flex space-x-3">
+                        <span class="font-bold">${questionCount} Qs</span>
+                        <span class="text-gray-500">${resourceCount} Res</span>
+                    </div>
+                </div>`;
+        });
+        summaryHtml += '</div>';
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-[1100]';
+        modal.innerHTML = `
+            <div class="bg-white p-5 rounded-xl w-80 shadow-xl">
+                <h3 class="text-lg font-bold mb-4">Subject Summary</h3>
+                ${summaryHtml}
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="mt-4 w-full bg-blue-500 text-white py-2 rounded text-sm font-bold">Close</button>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    function openResetQuizModal() {
+        document.getElementById('resetQuizModal').style.display = 'flex';
+        document.getElementById('resetModalContent').classList.remove('scale-95', 'opacity-0');
+        document.getElementById('resetModalContent').classList.add('scale-100', 'opacity-100');
+    }
+    
+    function closeResetModal() {
+        document.getElementById('resetQuizModal').style.display = 'none';
+    }
+    
+    function confirmResetQuizProgress() {
+        const password = document.getElementById('resetPasswordInput').value;
+        
+        if (password !== adminPassword) {
+            document.getElementById('resetPasswordError').classList.remove('hidden');
+            return;
+        }
+        
+        mockUsers.forEach(user => {
+            user.quizzesTaken = 0;
+            user.lastAttempt = null;
+            user.levelProgress = {};
+            user.lastAttemptDetails = {};
+            user.testHistory = [];
+            
+            if (user.role === 'admin') {
+                user.role = 'admin';
+            }
+        });
+        
+        saveUsers();
+        closeResetModal();
+        
+        if (currentUser) {
+            const userIndex = mockUsers.findIndex(u => u.email === currentUser.email);
+            if (userIndex !== -1) {
+                currentUser = mockUsers[userIndex];
+            }
+        }
+        
+        alertMessage("All quiz progress has been reset!", "bg-green-500");
+        renderAdminDashboard();
+    }
+
+    function scrollToUserList() {
+        const el = document.getElementById('userManagementSection');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function showQuestionSummary() {
+        let summaryHtml = '<div class="text-left space-y-2">';
+        subjects.forEach(s => {
+            let count = 0;
+            if (quizData[s]) {
+                for(let l in quizData[s]) count += quizData[s][l].length;
+            }
+            summaryHtml += `<div class="flex justify-between border-b pb-1 text-sm"><span>${s}</span><span class="font-bold">${count}</span></div>`;
+        });
+        summaryHtml += '</div>';
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-[1100]';
+        modal.innerHTML = `
+            <div class="bg-white p-5 rounded-xl w-72 shadow-xl">
+                <h3 class="text-lg font-bold mb-4">Question Breakdown</h3>
+                ${summaryHtml}
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="mt-4 w-full bg-blue-500 text-white py-2 rounded text-sm font-bold">Close</button>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    function updateTimerSettings() {
+        const val = parseFloat(document.getElementById('adminTimerInput').value);
+        if (val > 0) {
+            quizSettings.minutesPerQuestion = val;
+            saveSettings();
+            alertMessage(`Timer set to ${val} min/question`, "bg-green-500");
+        }
+    }
+    
+    function toggleTimer() {
+        quizSettings.timerEnabled = !quizSettings.timerEnabled;
+        saveSettings();
+        renderAdminDashboard();
+    }
+    
+    function deleteUser(email) {
+        if(confirm("Delete user?")) {
+            mockUsers = mockUsers.filter(u => u.email !== email);
+            saveUsers();
+            renderAdminDashboard();
+        }
+    }
+
+    // ==== MANUAL EXAM CREATOR ====
+    function openManualExamCreator() { 
+        document.getElementById('manualExamModal').style.display = 'flex'; 
+        document.getElementById('manualQuestionsContainer').innerHTML = '';
+        manualQuestions = [];
+        addManualQuestion(); 
+    }
+    
+    function addManualQuestion() {
+        const c = document.getElementById('manualQuestionsContainer');
+        const id = manualQuestions.length;
+        manualQuestions.push({ type: 'radio', question: '', options: ['', ''], answer: '', hint: '' });
+        
+        const d = document.createElement('div');
+        d.className = 'question-item bg-gray-50 p-3 rounded-lg border border-gray-200 mb-2';
+        d.id = `q-item-${id}`;
+        d.innerHTML = renderManualQuestionInputs(id);
+        c.appendChild(d);
+    }
+
+    function renderManualQuestionInputs(id) {
+        const q = manualQuestions[id];
+        let optionsHtml = '';
+
+        if (q.type === 'radio') {
+            optionsHtml = `
+                <div class="space-y-1 mb-2">
+                    ${q.options.map((opt, i) => `
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" name="correct-${id}" onclick="updateManualAnswer(${id}, '${i}')" class="h-4 w-4">
+                            <input type="text" placeholder="Option ${i+1}" value="${opt}" 
+                                   class="w-full border p-1 rounded text-xs" 
+                                   oninput="updateManualOption(${id}, ${i}, this.value)">
+                        </div>
+                    `).join('')}
+                </div>
+                <button type="button" onclick="addManualOptionInput(${id})" class="text-[10px] text-blue-500 font-bold">+ Add Option</button>
+            `;
+        } else if (q.type === 'checkbox') {
+            optionsHtml = `
+                <div class="space-y-1 mb-2">
+                    ${q.options.map((opt, i) => `
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" onchange="updateManualMultiAnswer(${id}, this, ${i})" class="h-4 w-4">
+                            <input type="text" placeholder="Option ${i+1}" value="${opt}" 
+                                   class="w-full border p-1 rounded text-xs" 
+                                   oninput="updateManualOption(${id}, ${i}, this.value)">
+                        </div>
+                    `).join('')}
+                </div>
+                <button type="button" onclick="addManualOptionInput(${id})" class="text-[10px] text-blue-500 font-bold">+ Add Option</button>
+            `;
+        } else if (q.type === 'truefalse') {
+            optionsHtml = `<div class="text-[10px] text-gray-500 italic mb-2">Options set to: True, False</div>`;
+        } else if (q.type === 'essay') {
+            optionsHtml = `<div class="text-[10px] text-gray-500 italic mb-2">Essay: No options required.</div>`;
+        }
+
+        return `
+            <div class="flex justify-between mb-2">
+                <span class="font-bold text-xs">Question ${id+1}</span>
+                <select class="text-[10px] border p-1 rounded" oninput="changeManualType(${id}, this.value)">
+                    <option value="radio" ${q.type==='radio'?'selected':''}>Single Choice</option>
+                    <option value="checkbox" ${q.type==='checkbox'?'selected':''}>Multiple Choice</option>
+                    <option value="truefalse" ${q.type==='truefalse'?'selected':''}>True/False</option>
+                    <option value="essay" ${q.type==='essay'?'selected':''}>Essay</option>
+                </select>
+            </div>
+            <input placeholder="Question Text" value="${q.question}" class="w-full border p-1 rounded mb-2 text-xs font-bold" oninput="manualQuestions[${id}].question = this.value">
+            <div class="mb-2">
+                <label class="text-[10px] font-bold text-gray-500">Options & Correct Answer:</label>
+                ${optionsHtml}
+            </div>
+            <input id="q-ans-${id}" placeholder="Correct Answer (Auto-filled)" value="${q.answer}" class="w-full border p-1 rounded mb-2 text-xs bg-green-50" readonly>
+        `;
+    }
+
+    function changeManualType(id, newType) {
+        manualQuestions[id].type = newType;
+        manualQuestions[id].answer = ''; 
+        if(newType === 'truefalse') manualQuestions[id].options = ['True', 'False'];
+        else if(newType === 'essay') manualQuestions[id].options = [];
+        else if(manualQuestions[id].options.length < 2) manualQuestions[id].options = ['', ''];
+        document.getElementById(`q-item-${id}`).innerHTML = renderManualQuestionInputs(id);
+    }
+
+    function addManualOptionInput(id) {
+        manualQuestions[id].options.push('');
+        document.getElementById(`q-item-${id}`).innerHTML = renderManualQuestionInputs(id);
+    }
+
+    function updateManualOption(id, idx, val) {
+        manualQuestions[id].options[idx] = val;
+    }
+
+    function updateManualAnswer(id, idx) {
+        const val = manualQuestions[id].options[idx];
+        manualQuestions[id].answer = val;
+        document.getElementById(`q-ans-${id}`).value = val;
+    }
+
+    function updateManualMultiAnswer(id, checkbox, idx) {
+        const val = manualQuestions[id].options[idx];
+        let curr = manualQuestions[id].answer ? manualQuestions[id].answer.split(',') : [];
+        if(checkbox.checked) curr.push(val);
+        else curr = curr.filter(v => v !== val);
+        manualQuestions[id].answer = curr.join(',');
+        document.getElementById(`q-ans-${id}`).value = manualQuestions[id].answer;
+    }
+
+    function saveManualExam() {
+        const sub = document.getElementById('manualSubject').value;
+        const lev = parseInt(document.getElementById('manualLevel').value); 
+        
+        const valid = manualQuestions.every(q => q.question && (q.type === 'essay' || (q.options.length > 0 && q.answer)));
+        if (!valid) return alertMessage("Please fill all fields & select correct answers", "bg-red-500");
+
+        if(!quizData[sub]) quizData[sub] = {};
+        if(!quizData[sub][lev]) quizData[sub][lev] = [];
+        
+        manualQuestions.forEach(q => {
+            const processedOptions = q.options.map(opt => String(opt).trim()).filter(opt => opt !== '');
+            
+            if (q.type === 'truefalse' && processedOptions.length < 2) {
+                processedOptions.push('True', 'False');
+            }
+            
+            if (processedOptions.length < 2 && q.type !== 'essay') {
+                processedOptions.push('Option B', 'Option C', 'Option D');
+            }
+            
+            quizData[sub][lev].push({
+                question: q.question.trim(),
+                options: processedOptions,
+                answer: String(q.answer).trim(),
+                type: q.type,
+                hint: ''
+            });
+            
+            console.log("Manual exam added question:", q.question.trim(), "Answer:", q.answer.trim());
+        });
+        
+        saveQuizData();
+        closeManualExamCreator();
+        alertMessage(`Exam Saved with ${manualQuestions.length} questions!`, "bg-green-500");
+        
+        renderSubjectLevels(sub);
+    }
+
+    // ==== REST OF UPLOADER LOGIC ====
+    function closeManualExamCreator() { document.getElementById('manualExamModal').style.display = 'none'; }
+    function closeSubjectManagement() { document.getElementById('subjectManagementModal').style.display = 'none'; }
+    function openManualExamCreatorForSubject(s) { document.getElementById('manualSubject').value = s; openManualExamCreator(); }
+    
+    function openResourceUploader() { document.getElementById('resourceUploaderModal').style.display = 'flex'; }
+    function closeResourceUploader() { document.getElementById('resourceUploaderModal').style.display = 'none'; }
+    function openBulkUploader() { document.getElementById('bulkUploaderModal').style.display = 'flex'; }
+    function closeBulkUploader() { document.getElementById('bulkUploaderModal').style.display = 'none'; }
+    function openResourceUploaderForSubject(s) { document.getElementById('resourceSubject').value = s; openResourceUploader(); }
+
+    async function saveResources() {
+        const subject = document.getElementById('resourceSubject').value;
+        const level = parseInt(document.getElementById('resourceLevel').value);
+        const pdf = document.getElementById('pdfFileInput').files[0];
+        const video = document.getElementById('videoFileInput').files[0];
+        const status = document.getElementById('resourceUploadStatus');
+
+        if (!pdf && !video) return alertMessage("Select a file first", "bg-red-500");
+        
+        status.textContent = "Saving to Database... do not close.";
+        status.classList.remove('hidden');
+
+        try {
+            if (!resources[subject]) resources[subject] = {};
+            if (!resources[subject][level]) resources[subject][level] = { pdfs: [], videos: [] };
+            if (!resources[subject][level].pdfs) resources[subject][level].pdfs = [];
+            if (!resources[subject][level].videos) resources[subject][level].videos = [];
+
+            const date = new Date().toISOString();
+
+            if (pdf) {
+                const id = `pdf_${Date.now()}`;
+                await saveFileToDB(pdf, id);
+                resources[subject][level].pdfs.unshift({ id: id, name: pdf.name, date: date });
+            }
+            if (video) {
+                const id = `vid_${Date.now()}`;
+                await saveFileToDB(video, id);
+                resources[subject][level].videos.unshift({ id: id, name: video.name, date: date });
+            }
+            
+            saveResourcesMeta();
+            closeResourceUploader();
+            alertMessage("Saved to Local Database!", "bg-green-500");
+            if(currentSubject === subject) renderSubjectLevels(subject);
+            
+        } catch (e) {
+            console.error(e);
+            alertMessage("Error saving huge file. Device might be full.", "bg-red-500");
+        }
+        status.classList.add('hidden');
+    }
+
+   function processBulkUpload() {
+    const file = document.getElementById('csvFileInput').files[0];
+    const jsonFile = document.getElementById('jsonFileInput').files[0];
+
+    // === JSON UPLOAD ===
+    if (jsonFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                const s = data.subject || document.getElementById('uploadSubject').value;
+                const l = parseInt(data.level || document.getElementById('uploadLevel').value);
+
+                let count = 0;
+
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const qSubject = item.subject || s;
+                        const qLevel = item.level ? parseInt(item.level) : l;
+                        if (!quizData[qSubject]) quizData[qSubject] = {};
+                        if (!quizData[qSubject][qLevel]) quizData[qSubject][qLevel] = [];
+
+                        const qText = item.question || item.Question;
+                        const qAns = item.answer || item.Answer || item.correct;
+                        let qOpts = item.options || item.Options;
+                        const qType = item.type || item.Type || 'radio';
+                        const qHint = item.hint || item.Hint || '';
+
+                        if (typeof qOpts === 'string') {
+                            qOpts = qOpts.split('|').map(opt => opt.trim());
+                        } else if (!Array.isArray(qOpts)) {
+                            qOpts = [];
+                        }
+
+                        if (qOpts.length === 0 && qAns) {
+                            qOpts = [
+                                String(qAns).trim(),
+                                "Incorrect Option 1",
+                                "Incorrect Option 2",
+                                "Incorrect Option 3"
+                            ];
+                        }
+
+                        if (qText && qAns) {
+                            let finalAnswer = "";
+                            let rawVal = qAns;
+
+                            if (Array.isArray(qAns) && qAns.length > 0) {
+                                rawVal = qAns[0];
+                            }
+
+                            const strVal = String(rawVal).trim();
+
+                            const textMatch = qOpts.find(o => normalizeText(o) === normalizeText(strVal));
+                            if (textMatch) {
+                                finalAnswer = textMatch;
+                            }
+                            else if (/^\d+$/.test(strVal)) {
+                                const idx = parseInt(strVal);
+                                if (idx >= 0 && idx < qOpts.length) {
+                                    finalAnswer = qOpts[idx];
+                                } else {
+                                    finalAnswer = strVal; 
+                                }
+                            } else {
+                                finalAnswer = strVal;
+                            }
+
+                            quizData[qSubject][qLevel].push({
+                                question: qText.trim(),
+                                options: qOpts,
+                                answer: finalAnswer,
+                                type: qType,
+                                hint: qHint
+                            });
+
+                            count++;
+                            console.log("Added question:", qText.trim(), "Answer:", finalAnswer);
+                        }
+                    });
+                }
+
+                saveQuizData();
+                closeBulkUploader();
+                alertMessage(`JSON Uploaded: ${count} questions!`, "bg-green-500");
+                if (s) renderSubjectLevels(s);
+
+            } catch (err) {
+                console.error("JSON parse error:", err);
+                alertMessage("Invalid JSON format", "bg-red-500");
+            }
+        };
+        reader.readAsText(jsonFile);
+        return;
+    }
+
+    // === CSV UPLOAD ===
+    if (!file) return;
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (res) => {
+            let count = 0;
+            let lastSubject = '';
+
+            res.data.forEach(row => {
+                const qText = row.question || row.Question;
+                const qAns = row.answer || row.Answer || row.correct;
+                const qOptsStr = row.options || row.Options;
+                const qSub = row.subject || row.Subject;
+                const qLvl = row.level || row.Level;
+                const qType = row.type || row.Type || 'radio';
+
+                if (qText && qAns) {
+                    const s = qSub || document.getElementById('uploadSubject').value;
+                    const l = parseInt(qLvl || document.getElementById('uploadLevel').value);
+                    lastSubject = s;
+
+                    if (!quizData[s]) quizData[s] = {};
+                    if (!quizData[s][l]) quizData[s][l] = [];
+
+                    let opts;
+                    if (qOptsStr) {
+                        opts = qOptsStr.split('|').map(o => o.trim());
+                    } else {
+                        opts = [
+                            String(qAns).trim(),
+                            "Incorrect Option 1",
+                            "Incorrect Option 2",
+                            "Incorrect Option 3"
+                        ];
+                    }
+
+                    let finalAnswer = String(qAns).trim();
+                    
+                    if (opts.includes(finalAnswer)) { 
+                    }
+                    else if (/^\d+$/.test(finalAnswer)) {
+                        const idx = parseInt(finalAnswer) - 1;
+                        if (idx >= 0 && idx < opts.length) {
+                            finalAnswer = opts[idx];
+                        }
+                    }
+
+                    quizData[s][l].push({
+                        question: qText.trim(),
+                        answer: finalAnswer,
+                        options: opts,
+                        type: qType,
+                        hint: row.hint || ''
+                    });
+
+                    count++;
+                    console.log("CSV Added question:", qText.trim(), "Answer:", finalAnswer);
+                }
+            });
+
+            saveQuizData();
+            closeBulkUploader();
+            alertMessage(`Uploaded ${count} questions`, "bg-green-500");
+            if (lastSubject) renderSubjectLevels(lastSubject);
+        },
+        error: (err) => {
+            console.error("CSV parse error:", err);
+            alertMessage("Error parsing CSV file", "bg-red-500");
+        }
+    });
+}
+
+
+    function alertMessage(msg, bg) {
+        const d = document.createElement('div');
+        d.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-xl z-50 ${bg} text-sm`;
+        d.textContent = msg;
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 2500);
+    }
+
+    // ==== HELPER FUNCTION FOR HTML EXAMS ====
+    function openResourceWithTracking(id, name, subject, level) {
+        window.lastExternalQuizContext = {
+            subject: subject || currentSubject,
+            level: level || currentLevel,
+            resourceName: name
+        };
+        
+        openResource(id);
+    }
+    
+    // Debug functions
+    function debugCurrentQuiz() {
+        console.log("=== DEBUG QUIZ DATA ===");
+        console.log("Subject:", currentSubject);
+        console.log("Level:", currentLevel);
+        const questions = quizData[currentSubject]?.[currentLevel] || [];
+        console.log("Total questions:", questions.length);
+        
+        questions.forEach((q, idx) => {
+            console.log(`\nQ${idx + 1}: ${q.question}`);
+            console.log(`  Options: ${JSON.stringify(q.options)}`);
+            console.log(`  Answer: "${q.answer}"`);
+            console.log(`  Type: ${q.type}`);
+            
+            if (/^\d+$/.test(q.answer)) {
+                const idxNum = parseInt(q.answer) - 1;
+                if (idxNum >= 0 && idxNum < q.options.length) {
+                    console.log(`    ✓ Answer is index ${q.answer} -> "${q.options[idxNum]}"`);
+                } else {
+                    console.log(`    ✗ Invalid index: ${q.answer}`);
+                }
+            }
+        });
+        
+        alertMessage(`Debug info logged to console (${questions.length} questions)`, "bg-blue-500");
+    }
+    
+    function testQuizScoring() {
+        console.log("=== TESTING QUIZ DATA ===");
+        for (const subject in quizData) {
+            for (const level in quizData[subject]) {
+                const questions = quizData[subject][level];
+                console.log(`${subject} Level ${level}: ${questions.length} questions`);
+                
+                questions.forEach((q, i) => {
+                    console.log(`  Q${i+1}: "${q.question}"`);
+                    console.log(`    Options: ${JSON.stringify(q.options)}`);
+                    console.log(`    Answer: "${q.answer}"`);
+                    console.log(`    Type: ${q.type}`);
+                    
+                    if (/^\d+$/.test(q.answer)) {
+                        const idx = parseInt(q.answer) - 1;
+                        if (idx >= 0 && idx < q.options.length) {
+                            console.log(`    ✓ Answer is index ${q.answer} -> "${q.options[idx]}"`);
+                        } else {
+                            console.log(`    ✗ Invalid index: ${q.answer}`);
+                        }
+                    }
+                });
+            }
+        }
+        alertMessage("Quiz data logged to console", "bg-blue-500");
+    }
+    
+    // Initialize subject dropdowns after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            updateSubjectSelects();
+        }, 100);
+    });
+    
+    // Exports - Explicitly attaching to window to prevent ReferenceErrors
+    window.handleSignIn = handleSignIn;
+    window.handleSignUp = handleSignUp;
+    window.renderAuthScreen = renderAuthScreen;
+    window.renderSignUpForm = renderSignUpForm;
+    window.renderWelcomeScreen = renderWelcomeScreen;
+    window.renderStudentProfile = renderStudentProfile;
+    window.renderSubjectLevels = renderSubjectLevels;
+    window.startQuiz = startQuiz;
+    window.selectAnswer = selectAnswer;
+    window.nextQuestion = nextQuestion;
+    window.prevQuestion = prevQuestion;
+    window.renderAdminDashboard = renderAdminDashboard;
+    window.checkAdminPassword = checkAdminPassword;
+    window.closeModal = closeModal;
+    window.openModal = openModal;
+    window.openBulkUploader = openBulkUploader;
+    window.closeBulkUploader = closeBulkUploader;
+    window.processBulkUpload = processBulkUpload;
+    window.openManualExamCreator = openManualExamCreator;
+    window.closeManualExamCreator = closeManualExamCreator;
+    window.addManualQuestion = addManualQuestion;
+    window.saveManualExam = saveManualExam;
+    window.openResourceUploader = openResourceUploader;
+    window.closeResourceUploader = closeResourceUploader;
+    window.saveResources = saveResources;
+    window.openResource = openResource;
+    window.openManualExamCreatorForSubject = openManualExamCreatorForSubject;
+    window.openResourceUploaderForSubject = openResourceUploaderForSubject;
+    window.updateTimerSettings = updateTimerSettings;
+    window.toggleTimer = toggleTimer;
+    window.deleteUser = deleteUser;
+    window.scrollToUserList = scrollToUserList;
+    window.changeManualType = changeManualType;
+    window.addManualOptionInput = addManualOptionInput;
+    window.updateManualOption = updateManualOption;
+    window.showQuestionSummary = showQuestionSummary;
+    window.updateManualAnswer = updateManualAnswer;
+    window.updateManualMultiAnswer = updateManualMultiAnswer;
+    window.toggleMultiSelect = toggleMultiSelect;
+    window.submitMultiAnswer = submitMultiAnswer;
+    window.renameResource = renameResource;
+    window.deleteResource = deleteResource;
+    window.openResourceWithTracking = openResourceWithTracking;
+    window.debugCurrentQuiz = debugCurrentQuiz;
+    window.testQuizScoring = testQuizScoring;
+    window.openResetQuizModal = openResetQuizModal;
+    window.closeResetModal = closeResetModal;
+    window.confirmResetQuizProgress = confirmResetQuizProgress;
+    window.openGlobalMenu = openGlobalMenu;
+    window.openSubjectManagement = openSubjectManagement;
+    window.closeSubjectManagement = closeSubjectManagement;
+    window.addNewSubject = addNewSubject;
+    window.renameSubject = renameSubject;
+    window.deleteSubject = deleteSubject;
+    window.editSubjectName = editSubjectName;
+    window.saveSubjectChanges = saveSubjectChanges;
+    window.openSubjectManagementFromUploader = openSubjectManagementFromUploader;
+    window.openSubjectManagementFromManual = openSubjectManagementFromManual;
+    window.openSubjectManagementFromResource = openSubjectManagementFromResource;
+    window.showSubjectSummary = showSubjectSummary;
+    window.openUserListModal = openUserListModal;
+    window.closeUserList = closeUserList;
+    window.deleteUserFromList = deleteUserFromList;
+    window.exportUserData = exportUserData;
+  </script>
+</body>
+</html>
